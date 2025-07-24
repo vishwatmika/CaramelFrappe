@@ -15,14 +15,28 @@ repositories {
     mavenCentral()
 }
 
+val mockitoAgent = configurations.create("mockitoAgent")
+
 dependencies {
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    // Mockito
+    // testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation("org.mockito:mockito-inline:5.+") // includes "core"
+    testImplementation("org.mockito:mockito-junit-jupiter:5.+")
+
+    testImplementation(libs.mockito)
+    mockitoAgent(libs.mockito) { isTransitive = false }
+
     // This dependency is used by the application.
     implementation(libs.guava)
+
+    implementation("com.stripe:stripe-java:29.3.0")
+
+    implementation("org.slf4j:slf4j-log4j12:1.7.29")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -38,6 +52,16 @@ application {
 }
 
 tasks.named<Test>("test") {
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+    dependsOn("cleanTest")
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+tasks {
+    test {
+        jvmArgs?.add("-javaagent:${mockitoAgent?.asPath}")
+    }
 }
